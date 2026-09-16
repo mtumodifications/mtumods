@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MTUMods</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f7f8;
+            color: #164E73;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 24px;
+        }
+
+        .hero-content {
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .logo {
+            font-size: clamp(72px, 14vw, 180px);
+            font-weight: 800;
+            letter-spacing: -0.08em;
+            line-height: 0.85;
+            margin: 0;
+        }
+
+        .intro {
+            max-width: 620px;
+            margin-top: 42px;
+            font-size: 18px;
+            line-height: 1.6;
+            color: #4b6473;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 34px;
+
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+
+            color: #164E73;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #367FA3;
+        }
+
+        .map-section {
+            min-height: 70vh;
+            padding: 100px 24px;
+            background: #164E73;
+            color: white;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .map-content {
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .map-label {
+            margin-bottom: 20px;
+
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+
+            color: #A8D9E8;
+        }
+
+        .map-title {
+            margin: 0 0 40px;
+
+            font-size: clamp(42px, 7vw, 82px);
+            line-height: 0.95;
+            letter-spacing: -0.05em;
+        }
+
+        .map-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 18px;
+
+            padding: 18px 24px;
+
+            color: #164E73;
+            background: white;
+
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+
+            border-radius: 6px;
+
+            transition:
+                transform 0.2s ease,
+                background 0.2s ease;
+        }
+
+        .map-link:hover {
+            transform: translateY(-3px);
+            background: #E5F4F8;
+        }
+
+        .arrow {
+            font-size: 18px;
+        }
+
+        footer {
+            padding: 30px 24px;
+            background: #0f3852;
+            color: #8fb6c7;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .hero {
+                min-height: 90vh;
+            }
+
+            .intro {
+                font-size: 16px;
+                margin-top: 32px;
+            }
+
+            .map-section {
+                min-height: 60vh;
+                padding: 80px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main>
+
+        <section class="hero">
+            <div class="hero-content">
+
+                <h1 class="logo">MTUMods</h1>
+
+                <p class="intro">
+                    MTUMods is a digital project exploring and building useful
+                    tools, experiences, and resources for the MTU community.
+                </p>
+
+                <div class="status">
+                    <span class="status-dot"></span>
+                    Coming soon
+                </div>
+
+            </div>
+        </section>
+
+
+        <section class="map-section">
+
+            <div class="map-content">
+
+                <div class="map-label">
+                    Explore
+                </div>
+
+                <h2 class="map-title">
+                    Interactive<br>
+                    Campus Map
+                </h2>
+
+                <a class="map-link" href="map/cork">
+                    Open interactive map
+                    <span class="arrow">↗</span>
+                </a>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <footer>
+        MTUMods, 2026
+    </footer>
+
+</body>
+</html>
