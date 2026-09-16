@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maps</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <style>
+        #map {
+            width: 100%;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .floor-control {
+            background: white;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            margin-bottom: 5px;
+            overflow: hidden;
+        }
+
+        .floor-control a {
+            display: block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+
+            color: #333;
+            background: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+
+            border-bottom: 1px solid #ccc;
+        }
+
+        .floor-control a:last-child {
+            border-bottom: none;
+        }
+
+        .floor-control a:hover {
+            background: #f4f4f4;
+        }
+
+        .section-label-wrapper {
+            width: 0;
+            height: 0;
+        }
+
+        .section-label {
+            position: absolute;
+            left: 0;
+            top: 0;
+
+            transform: translate(-50%, -50%);
+
+            min-width: 55px;
+            max-width: 100px;
+            padding: 4px 7px;
+
+            box-sizing: border-box;
+
+            white-space: normal;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+
+            color: #FFFFFF;
+            background: rgba(22, 78, 115, 0.92);
+
+            border-radius: 6px;
+
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1.15;
+            text-align: center;
+
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .room-number-label-wrapper {
+            width: 0;
+            height: 0;
+        }
+
+        .room-number-label {
+            position: absolute;
+            left: 0;
+            top: 0;
+
+            transform: translate(-50%, -50%);
+
+            padding: 3px 5px;
+            box-sizing: border-box;
+
+            color: #164E73;
+            background: rgba(255, 255, 255, 0.92);
+
+            border: 1px solid rgba(54, 127, 163, 0.65);
+            border-radius: 4px;
+
+            font-size: 9px;
+            font-weight: 700;
+            line-height: 1.1;
+            text-align: center;
+
+            white-space: nowrap;
+
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+
+            pointer-events: none;
+        }
+
+        /* Remove the default Leaflet popup styling */
+        .custom-room-popup .leaflet-popup-content-wrapper {
+            padding: 0;
+            overflow: hidden;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.20);
+        }
+
+        .custom-room-popup .leaflet-popup-content {
+            margin: 0;
+            width: 280px !important;
+        }
+
+        .custom-room-popup .leaflet-popup-tip {
+            box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Popup container */
+        .room-popup {
+            width: 100%;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #1f2937;
+        }
+
+        /* Blue header */
+        .room-popup-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 18px 20px;
+            position: relative;
+        }
+
+        /* Room number */
+        .room-popup-number {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            line-height: 1.1;
+        }
+
+        /* Body */
+        .room-popup-body {
+            padding: 18px 20px 20px;
+            background: white;
+        }
+
+        /* Small ROOM label */
+        .room-popup-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #6b7280;
+            letter-spacing: 1.2px;
+            margin-bottom: 4px;
+        }
+
+        /* Room name */
+        .room-popup-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.3;
+            margin-bottom: 18px;
+        }
+
+        /* Information section */
+        .room-popup-info {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 14px;
+        }
+
+        /* Individual information row */
+        .room-popup-info-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 13px;
+        }
+
+        .room-popup-info-item:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Icons */
+        .room-popup-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #eff6ff;
+            border-radius: 10px;
+
+            font-size: 17px;
+            flex-shrink: 0;
+        }
+
+        /* Small info labels */
+        .room-popup-info-label {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-bottom: 2px;
+        }
+
+        /* Info values */
+        .room-popup-info-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .parking-space-icon-wrapper,
+        .stairs-icon-wrapper {
+            width: 0;
+            height: 0;
+        }
+
+        .parking-space-icon {
+            position: absolute;
+            left: 0;
+            top: 0;
+
+            transform: translate(-50%, -50%);
+
+            width: 24px;
+            height: 24px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: white;
+            border: 2px solid #164E73;
+            border-radius: 50%;
+
+            font-size: 14px;
+
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+
+            pointer-events: none;
+        }
+
+        .stairs-icon {
+            position: absolute;
+            left: 0;
+            top: 0;
+
+            transform: translate(-50%, -50%);
+
+            width: 24px;
+            height: 24px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: white;
+            border: 4px solid #164E73;
+            border-radius: 50%;
+
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="map"></div>
+
+    <!-- Include Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script>
+
+    <!-- Include data variable files -->
+    <script src="rooms.js"></script>
+    <script src="buildings.js"></script>
+    <script src="parkingSpaces.js"></script>
+    <script src="stairs.js"></script>
+
+
+    <script>
+        var map = L.map('map', {
+            zoomControl: false
+        });
+
+        L.control.zoom({
+            position: 'bottomright'
+        }).addTo(map);
+
+        /*
+        // Floor control
+        */
+        var floorControl = L.control({ position: 'bottomright' });
+
+        floorControl.onAdd = function (map) {
+            var container = L.DomUtil.create('div', 'leaflet-bar floor-control');
+
+            var floors = ['G', '1', '2'].reverse();
+
+            floors.forEach(function (floor) {
+                var button = L.DomUtil.create('a', '', container);
+
+                button.href = '#';
+                button.innerHTML = floor;
+                button.title = 'Floor ' + floor;
+
+                button.onclick = function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    showFloor(floor);
+                };
+            });
+
+            return container;
+        };
+
+        floorControl.addTo(map);
+
+        /*
+        // Standard OpenStreetMap base layer
+        */
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 20,
+            attribution: '© OpenStreetMap contributors',
+        }).addTo(map);
+
+        var floorLayers = {
+            G: L.geoJSON([], {
+                style: styleRoom,
+                onEachFeature: onEachRoom
+            }),
+
+            1: L.geoJSON([], {
+                style: styleRoom,
+                onEachFeature: onEachRoom
+            }),
+
+            2: L.geoJSON([], {
+                style: styleRoom,
+                onEachFeature: onEachRoom
+            })
+        };
+
+        var stairsLayers = {
+            G: L.geoJSON([], {
+                style: styleStairs,
+                onEachFeature: onEachStair
+            }),
+
+            1: L.geoJSON([], {
+                style: styleStairs,
+                onEachFeature: onEachStair
+            }),
+
+            2: L.geoJSON([], {
+                style: styleStairs,
+                onEachFeature: onEachStair
+            })
+        };
+
+        roomData.features.forEach(function (feature) {
+            if (!feature.properties) return;
+
+            var level = Number(feature.properties.Level);
+
+            if (level === 0) {
+                floorLayers.G.addData(feature);
+            } else if (level === 1) {
+                floorLayers[1].addData(feature);
+            } else if (level === 2) {
+                floorLayers[2].addData(feature);
+            }
+        });
+
+        stairs.features.forEach(function (feature) {
+            if (!feature.properties) return;
+
+            var level = Number(feature.properties.Level);
+
+            if (level === 0) {
+                stairsLayers.G.addData(feature);
+            } else if (level === 1) {
+                stairsLayers[1].addData(feature);
+            } else if (level === 2) {
+                stairsLayers[2].addData(feature);
+            }
+        });
+
+        /*
+        // Styles
+        */
+        function styleRoom(feature) {
+            return {
+                fillColor: '#E5F4F8',   // Room interior color
+                weight: 0.8,            // Wall line thickness
+                opacity: 1,             // Wall opacity
+                color: '#367FA3',       // Wall outline color
+                fillOpacity: 0.85       // Room opacity transparency
+            };
+        }
+
+        var selectedRoomLayer = null;
+
+        var selectedRoomStyle = {
+            fillColor: '#BFE3EE',
+            weight: 2.5,
+            color: '#164E73',
+            fillOpacity: 0.95
+        };
+
+        function styleBuilding(feature) {
+            return {
+                fillColor: '#E13951',  // Building interior color
+                weight: 1.2,           // Wall line thickness
+                opacity: 1,            // Wall opacity
+                color: '#164E73',      // Wall outline color
+                fillOpacity: 1         // Building opacity transparency
+            };
+        }
+
+        function styleStairs(feature) {
+            return {
+                fillColor: '#E5F4F8',   // Room interior color
+                weight: 0.8,            // Wall line thickness
+                opacity: 1,             // Wall opacity
+                color: '#367FA3',       // Wall outline color
+                fillOpacity: 0.85       // Room opacity transparency
+            };
+        }
+
+        function styleParkingSpaces(feature) {
+            const isReserved = feature.properties?.Is_Reserved === true;
+            const isBikeOnly = feature.properties?.Is_Bike_Only === true;
+
+            return {
+                fillColor: isReserved
+                    ? '#D96A7A'         // Soft red
+                    : isBikeOnly
+                        ? '#245A82'
+                        : '#A8D9E8',
+                weight: 0.8,
+                opacity: 1,
+                color: isReserved
+                    ? '#B83F54'
+                    : isBikeOnly
+                        ? '#164E73'
+                        : '#367FA3',
+                fillOpacity: isBikeOnly ? 0.9 : 0.4,
+                dashArray: '5, 5'
+            }
+
+        }
+
+        function getTopCenterOfPolygon(feature) {
+            const bbox = turf.bbox(feature);
+
+            const west = bbox[0];
+            const north = bbox[3];
+            const east = bbox[2];
+
+            return [
+                (west + east) / 2,
+                north
+            ];
+        }
+
+        function onEachStair(feature, layer) {
+            const p = feature.properties;
+
+            const floorNames = {
+                0: "Ground Floor",
+                1: "1st Floor",
+                2: "2nd Floor"
+            };
+
+            const floorName =
+                floorNames[p.Level] ?? `Floor ${p.Level ?? "N/A"}`;
+
+            // Find a point inside the stair polygon
+            const point = turf.pointOnFeature(feature);
+            const coordinates = point.geometry.coordinates;
+
+            const lat = coordinates[1];
+            const lng = coordinates[0];
+
+            // Stairs icon
+            const stairsIcon = L.marker([lat, lng], {
+                icon: L.divIcon({
+                    className: 'stairs-icon-wrapper',
+
+                    html: `
+                    <div class="stairs-icon">
+                        <svg
+                            width="18"
+                            height="18"
+                            fill="#164E73"
+                            version="1.1"
+                            xmlns="http://www.w3.org/2000/svg"
+                            xmlns:xlink="http://www.w3.org/1999/xlink"
+                            viewBox="0 0 512.004 512.004"
+                            preserveAspectRatio="xMidYMid meet"
+                        >
+                            <g>
+                                <g>
+                                    <g>
+                                        <polygon points="364.957,107.108 364.957,141.969 380.014,141.969 380.014,203.974 268.09,203.974 268.09,238.835 
+                                            283.148,238.835 283.148,300.841 171.223,300.841 171.223,335.703 186.282,335.703 186.282,397.708 74.356,397.708 
+                                            74.356,432.569 89.415,432.569 89.415,512.004 124.276,512.004 124.276,432.569 221.143,432.569 221.143,335.703 
+                                            318.009,335.703 318.009,238.835 414.876,238.835 414.876,141.969 494.312,141.969 494.312,107.108"/>
+                                        
+                                        <rect
+                                            x="-36.523"
+                                            y="155.536"
+                                            transform="matrix(0.7071 -0.7071 0.7071 0.7071 -66.4634 185.4769)"
+                                            width="454.363"
+                                            height="34.861"
+                                        />
+                                    </g>
+                                </g>
+                            </g>
+                        </svg>
+
+                    </div>
+                `,
+
+                    iconSize: [0, 0],
+                    iconAnchor: [0, 0]
+                }),
+
+                interactive: false
+            });
+
+            // Store the icon on the parking layer
+            layer.stairsIcon = stairsIcon;
+        }
+
+        /*
+        // Popups
+        */
+        function onEachRoom(feature, layer) {
+            const p = feature.properties;
+
+            if (!p || p.Room_Name === "VOID") return;
+
+            // Convert Level number into a readable floor name
+            const floorNames = {
+                0: "Ground Floor",
+                1: "1st Floor",
+                2: "2nd Floor"
+            };
+
+            const floorName =
+                floorNames[p.Level] ?? `Floor ${p.Level ?? "N/A"}`;
+
+            /*
+            * ROOM NUMBER LABEL
+            *
+            * pointOnFeature() guarantees that the point is
+            * inside the classroom polygon.
+            */
+            if (p.Room_Number && p.Room_Number !== "N/A") {
+
+                const point = turf.pointOnFeature(feature);
+                const coordinates = point.geometry.coordinates;
+
+                const lat = coordinates[1];
+                const lng = coordinates[0];
+
+                const roomLabel = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'room-number-label-wrapper',
+
+                        html: `
+                            <div class="room-number-label">
+                                ${p.Room_Number}
+                            </div>
+                        `,
+
+                        iconSize: [0, 0],
+                        iconAnchor: [0, 0]
+                    }),
+
+                    interactive: true
+                });
+
+                // Store the label on the room layer
+                layer.roomNumberLabel = roomLabel;
+            }
+
+            /*
+            * ROOM POPUP
+            */
+            const popupContent = `
+                <div class="room-popup">
+
+                    <div class="room-popup-header">
+                        <div class="room-popup-number">
+                            ${p.Room_Number ?? p.Room_Name}
+                        </div>
+                    </div>
+
+                    <div class="room-popup-body">
+
+                        ${p.Room_Number && p.Room_Number !== "N/A" ? `
+                            <div class="room-popup-label">
+                                ROOM
+                            </div>
+
+                            <div class="room-popup-name">
+                                ${p.Room_Name ?? "Unnamed Room"}
+                            </div>
+                        ` : ""}
+
+                        <div class="room-popup-info">
+
+                            ${p.Room_Number && p.Room_Number !== "N/A" ? `
+                                <div class="room-popup-info-item">
+                                    <span class="room-popup-icon">🏢</span>
+
+                                    <div>
+                                        <div class="room-popup-info-label">
+                                            Room Number
+                                        </div>
+
+                                        <div class="room-popup-info-value">
+                                            ${p.Room_Number}
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ""}
+
+                            <div class="room-popup-info-item">
+                                <span class="room-popup-icon">📍</span>
+
+                                <div>
+                                    <div class="room-popup-info-label">
+                                        Floor
+                                    </div>
+
+                                    <div class="room-popup-info-value">
+                                        ${floorName}
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            `;
+
+            // Find the top point of the polygon
+            const topPoint = getTopCenterOfPolygon(feature);
+
+            const popupPosition = L.latLng(
+                topPoint[1],
+                topPoint[0]
+            );
+
+            layer.bindPopup(popupContent, {
+                maxWidth: 320,
+                minWidth: 280,
+                className: "custom-room-popup",
+                autoPan: true
+            });
+
+            layer.on('click', function () {
+
+                // Reset the previously selected room
+                if (selectedRoomLayer && selectedRoomLayer !== layer) {
+                    selectedRoomLayer.setStyle(
+                        styleRoom(selectedRoomLayer.feature)
+                    );
+                }
+
+                // Select this room
+                selectedRoomLayer = layer;
+
+                // Highlight it
+                layer.setStyle(selectedRoomStyle);
+
+                // Keep selected room visually above other rooms
+                if (layer.bringToFront) {
+                    layer.bringToFront();
+                }
+
+                // Open popup at the top of the polygon
+                layer.openPopup(popupPosition);
+            });
+        }
+
+
+        function onEachParkingSpace(feature, layer) {
+            const p = feature.properties || {};
+
+            // Find a point inside the parking-space polygon
+            const point = turf.pointOnFeature(feature);
+            const coordinates = point.geometry.coordinates;
+
+            const lat = coordinates[1];
+            const lng = coordinates[0];
+
+            let icon = null;
+
+            if (p.Is_Bike_Only) {
+                icon = '🚲';
+            } else if (p.Is_Reserved) {
+                icon = '🚫';
+            }
+
+            if (icon) {
+                // Parking space icon
+                const parkingIcon = L.marker([lat, lng], {
+
+                    icon: L.divIcon({
+                        className: 'parking-space-icon-wrapper',
+
+                        html: `
+                            <div class="parking-space-icon">
+                                ${icon}
+                            </div>
+                        `,
+
+                        iconSize: [0, 0],
+                        iconAnchor: [0, 0]
+                    }),
+
+                    interactive: false
+                });
+
+                // Store the icon on the parking layer
+                layer.parkingIcon = parkingIcon;
+            }
+
+            if (p && p.Is_Bike_Only) {
+                const yesNo = value => value ? "Yes" : "No";
+                const popupContent = `
+                    <div style="min-width: 250px;">
+                        <h3 style="margin: 0 0 10px 0;">
+                            ${p.Parking_Space_Name}
+                        </h3>
+
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td><strong>Bike Only</strong></td>
+                                <td>${yesNo(p.Is_Bike_Only)}</td>
+                            </tr>
+                        </table>
+                    </div>
+                `;
+
+                layer.bindPopup(popupContent);
+            }
+
+            else if (p && p.Parking_Space_Name) {
+                const yesNo = value => value ? "Yes" : "No";
+
+                const popupContent = `
+                    <div style="min-width: 250px;">
+                        <h3 style="margin: 0 0 10px 0;">
+                            ${p.Parking_Space_Name}
+                        </h3>
+
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td><strong>Full Capacity</strong></td>
+                                <td>${p.Full_Capacity ?? "N/A"}</td>
+                            </tr>
+
+                            <tr>
+                                <td><strong>Disabled Capacity</strong></td>
+                                <td>${p.Disabled_Capacity ?? "N/A"}</td>
+                            </tr>
+
+                            <tr>
+                                <td><strong>Paid Parking</strong></td>
+                                <td>${yesNo(p.Is_Paid)}</td>
+                            </tr>
+
+                            <tr>
+                                <td><strong>Reserved</strong></td>
+                                <td>${yesNo(p.Is_Reserved)}</td>
+                            </tr>
+
+                            <tr>
+                                <td><strong>Disability Friendly</strong></td>
+                                <td>${yesNo(p.Is_Disability_Friendly)}</td>
+                            </tr>
+
+                            <tr>
+                                <td><strong>Bike Only</strong></td>
+                                <td>${yesNo(p.Is_Bike_Only)}</td>
+                            </tr>
+
+                            <tr>
+                                <td><strong>Visitor Parking</strong></td>
+                                <td>${yesNo(p.Is_Visitor_Parking)}</td>
+                            </tr>
+
+                            <tr>
+                                <td><strong>Barrier</strong></td>
+                                <td>${yesNo(p.Has_Barrier)}</td>
+                            </tr>
+                        </table>
+                    </div>
+                `;
+
+                layer.bindPopup(popupContent);
+            }
+
+            else if (p && p.Parking_Space_Name) {
+                layer.bindPopup("<strong>Car Park</strong> ");
+            }
+        }
+
+        var buildingLayer = L.geoJSON(buildingData, {
+            style: styleBuilding,
+
+            onEachFeature: function (feature, layer) {
+                var p = feature.properties || {};
+                var sectionName = p.Section_Name;
+                var description = p.Description;
+
+                if (sectionName) {
+
+                    // Find a point inside the polygon
+                    var center = turf.pointOnFeature(feature).geometry.coordinates;
+
+                    var lat = center[1];
+                    var lng = center[0];
+
+                    // Building popup
+                    var popupContent = `
+                        <div class="room-popup">
+
+                            <div class="room-popup-header">
+                                <div class="room-popup-number">
+                                    ${sectionName}
+                                </div>
+                            </div>
+
+                            <div class="room-popup-body">
+
+                                <div class="room-popup-label">
+                                    BUILDING
+                                </div>
+
+                                <div class="room-popup-name">
+                                    ${sectionName}
+                                </div>
+
+                                ${description ? `
+                                    <div class="room-popup-info">
+                                        <div class="room-popup-info-item">
+                                            <span class="room-popup-icon">📖</span>
+                                            <div>
+                                                <div class="room-popup-info-label">
+                                                    Description
+                                                </div>
+                                                <div class="room-popup-info-value">
+                                                    ${description}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : ""}
+
+                            </div>
+
+                        </div>
+                    `;
+
+                    var label = L.marker([lat, lng], {
+                        icon: L.divIcon({
+                            className: 'section-label-wrapper',
+                            html: `<div class="section-label">${sectionName}</div>`,
+                            iconSize: [0, 0],
+                            iconAnchor: [0, 0]
+                        }),
+                        interactive: true
+                    });
+
+                    // Clicking the building label opens the popup
+                    label.bindPopup(popupContent, {
+                        maxWidth: 320,
+                        minWidth: 280,
+                        className: "custom-room-popup"
+                    });
+
+                    layer.sectionLabel = label;
+                }
+            }
+        }).addTo(map);
+
+        var parkingLayer = L.geoJSON(parkingSpaces, {
+            style: styleParkingSpaces,
+            onEachFeature: onEachParkingSpace
+        }).addTo(map);
+
+
+        parkingLayer.eachLayer(function (layer) {
+            if (layer.parkingIcon) {
+                layer.parkingIcon.addTo(map);
+            }
+        });
+
+        map.fitBounds(buildingLayer.getBounds());
+
+        var BUILDING_LABEL_ZOOM = 17;
+
+        // Show labels only when sufficiently zoomed in
+        function updateBuildingLabels() {
+            var zoom = map.getZoom();
+
+            buildingLayer.eachLayer(function (layer) {
+                if (!layer.sectionLabel) return;
+
+                const shouldShow = zoom >= BUILDING_LABEL_ZOOM;
+
+                if (shouldShow) {
+                    if (!map.hasLayer(layer.sectionLabel)) {
+                        layer.sectionLabel.addTo(map);
+                    }
+                } else {
+                    if (map.hasLayer(layer.sectionLabel)) {
+                        map.removeLayer(layer.sectionLabel);
+                    }
+                }
+            });
+        }
+
+        var ROOM_ZOOM_LEVEL = 18;
+
+        function updateRoomNumberLabels() {
+
+            var zoom = map.getZoom();
+
+            Object.values(floorLayers).forEach(function (floorLayer) {
+
+                floorLayer.eachLayer(function (roomLayer) {
+
+                    if (!roomLayer.roomNumberLabel) return;
+
+                    // Only show labels for the currently selected floor
+                    if (floorLayer !== floorLayers[map.currentFloor]) {
+
+                        if (map.hasLayer(roomLayer.roomNumberLabel)) {
+                            map.removeLayer(roomLayer.roomNumberLabel);
+                        }
+
+                        return;
+                    }
+
+                    // Show labels when zoomed in
+                    if (zoom >= 19) {
+
+                        if (!map.hasLayer(roomLayer.roomNumberLabel)) {
+                            roomLayer.roomNumberLabel.addTo(map);
+                        }
+
+                    } else {
+
+                        if (map.hasLayer(roomLayer.roomNumberLabel)) {
+                            map.removeLayer(roomLayer.roomNumberLabel);
+                        }
+                    }
+                });
+            });
+        }
+
+        // Currently selected floor
+        map.currentFloor = "G";
+
+        function showFloor(floor) {
+
+            // Remember selected floor
+            map.currentFloor = floor;
+
+            // Hide ALL room layers
+            Object.values(floorLayers).forEach(function (layer) {
+                if (map.hasLayer(layer)) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            // Hide ALL stair layers
+            Object.values(stairsLayers).forEach(function (layer) {
+                if (map.hasLayer(layer)) {
+                    map.removeLayer(layer);
+                }
+
+                // Hide stair icons
+                layer.eachLayer(function (stairLayer) {
+                    if (
+                        stairLayer.stairsIcon &&
+                        map.hasLayer(stairLayer.stairsIcon)
+                    ) {
+                        map.removeLayer(stairLayer.stairsIcon);
+                    }
+                });
+            });
+
+            // Show current floor if zoomed in
+            updateRoomVisibility();
+            updateRoomNumberLabels();
+            updateStairsVisibility();
+        }
+
+        function updateRoomVisibility() {
+
+            var currentFloor = map.currentFloor;
+            var selectedLayer = floorLayers[currentFloor];
+
+            if (!selectedLayer) return;
+
+            // Zoomed in enough -> show selected floor
+            if (map.getZoom() >= ROOM_ZOOM_LEVEL) {
+
+                if (!map.hasLayer(selectedLayer)) {
+                    selectedLayer.addTo(map);
+                }
+            }
+
+            // Zoomed out -> hide ALL rooms
+            else {
+
+                Object.values(floorLayers).forEach(function (layer) {
+                    if (map.hasLayer(layer)) {
+                        map.removeLayer(layer);
+                    }
+                });
+            }
+        }
+
+        function updateStairsVisibility() {
+
+            var currentFloor = map.currentFloor;
+            var selectedLayer = stairsLayers[currentFloor];
+
+            if (!selectedLayer) return;
+
+            // Zoomed in enough -> show stairs for selected floor
+            if (map.getZoom() >= ROOM_ZOOM_LEVEL) {
+
+                if (!map.hasLayer(selectedLayer)) {
+                    selectedLayer.addTo(map);
+                }
+
+                // Add stair icons
+                selectedLayer.eachLayer(function (layer) {
+                    if (
+                        layer.stairsIcon &&
+                        !map.hasLayer(layer.stairsIcon)
+                    ) {
+                        layer.stairsIcon.addTo(map);
+                    }
+                });
+
+            } else {
+
+                // Hide all stair layers
+                Object.values(stairsLayers).forEach(function (layer) {
+
+                    if (map.hasLayer(layer)) {
+                        map.removeLayer(layer);
+                    }
+
+                    // Hide their icons too
+                    layer.eachLayer(function (stairLayer) {
+
+                        if (
+                            stairLayer.stairsIcon &&
+                            map.hasLayer(stairLayer.stairsIcon)
+                        ) {
+                            map.removeLayer(stairLayer.stairsIcon);
+                        }
+
+                    });
+                });
+            }
+        }
+
+        // Set initial floor
+        showFloor("G");
+        updateRoomVisibility();
+        updateStairsVisibility();
+        updateRoomNumberLabels();
+
+        map.on('zoomend', function () {
+            updateRoomVisibility();
+            updateStairsVisibility();
+            updateBuildingLabels();
+            updateRoomNumberLabels();
+        });
+
+    </script>
+</body>
+
+</html>
